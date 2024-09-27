@@ -1,5 +1,10 @@
 package org.apache.dubbo.registry.eureka;
 
+import com.netflix.appinfo.ApplicationInfoManager;
+import com.netflix.appinfo.InstanceInfo;
+import com.netflix.appinfo.providers.EurekaConfigBasedInstanceInfoProvider;
+import com.netflix.discovery.DefaultEurekaClientConfig;
+import com.netflix.discovery.DiscoveryClient;
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.registry.client.AbstractServiceDiscovery;
 import org.apache.dubbo.registry.client.ServiceInstance;
@@ -9,14 +14,32 @@ import java.util.List;
 import java.util.Set;
 
 public class EurekaServiceDiscovery extends AbstractServiceDiscovery {
-    
-    public EurekaServiceDiscovery(ApplicationModel applicationModel, URL registryURL) {
-        super(applicationModel, registryURL);
+
+    private static final String NAME = "eureka";
+    private static final String NAMESPACE = "namespace";
+    private static final String DASH = "-";
+
+    private final ApplicationInfoManager applicationInfoManager;
+    private final InstanceInfo instanceInfo;
+    private final DiscoveryClient eurekaClient;
+
+    public EurekaServiceDiscovery(ApplicationModel applicationModel, URL url) {
+        super(applicationModel, url);
+        String namespace = url.getAttribute(NAMESPACE, NAME + DASH + url.getApplication()+ DASH +url.getAddress()).toString();
+        EurekaDataCenterInstanceConfig instanceConfig = new EurekaDataCenterInstanceConfig(namespace);
+        InstanceInfo instanceInfo = new EurekaConfigBasedInstanceInfoProvider(instanceConfig).get();
+        this.instanceInfo = instanceInfo;
+        this.applicationInfoManager = new ApplicationInfoManager(instanceConfig, instanceInfo);
+        this.eurekaClient = createEurekaClient(namespace);
+    }
+
+    private DiscoveryClient createEurekaClient(String namespace) {
+        return new DiscoveryClient(applicationInfoManager,new DefaultEurekaClientConfig(namespace),null);
     }
     
     @Override
     protected void doRegister(ServiceInstance serviceInstance) throws RuntimeException {
-    
+
     }
     
     @Override

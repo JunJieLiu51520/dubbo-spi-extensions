@@ -5,55 +5,69 @@ import com.netflix.appinfo.InstanceInfo;
 import com.netflix.appinfo.providers.EurekaConfigBasedInstanceInfoProvider;
 import com.netflix.discovery.DefaultEurekaClientConfig;
 import com.netflix.discovery.DiscoveryClient;
-import com.netflix.discovery.EurekaClient;
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.registry.NotifyListener;
 import org.apache.dubbo.registry.support.FailbackRegistry;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class EurekaRegistry extends FailbackRegistry {
     
     private static final String NAME = "eureka";
-    
+    private static final String NAMESPACE = "namespace";
+    private static final String DASH = "-";
+
     private final ApplicationInfoManager applicationInfoManager;
-    private final EurekaClient eurekaClient;
-    
+    private final InstanceInfo instanceInfo;
+    private final DiscoveryClient eurekaClient;
+
     
     public EurekaRegistry(URL url) {
         super(url);
-        EurekaDataCenterInstanceConfig instanceConfig = new EurekaDataCenterInstanceConfig(NAME);
+        String namespace = url.getAttribute(NAMESPACE, NAME + DASH + url.getApplication()+ DASH +url.getAddress()).toString();
+        EurekaDataCenterInstanceConfig instanceConfig = new EurekaDataCenterInstanceConfig(namespace);
         InstanceInfo instanceInfo = new EurekaConfigBasedInstanceInfoProvider(instanceConfig).get();
-        applicationInfoManager = new ApplicationInfoManager(instanceConfig, instanceInfo);
-        this.eurekaClient = createEurekaClient(url);
+        this.instanceInfo = instanceInfo;
+        this.applicationInfoManager = new ApplicationInfoManager(instanceConfig, instanceInfo);
+        this.eurekaClient = createEurekaClient(namespace);
     }
     
-    private EurekaClient createEurekaClient(URL url) {
-        DefaultEurekaClientConfig eurekaClientConfig = new DefaultEurekaClientConfig(NAME);
-        return new DiscoveryClient(applicationInfoManager,eurekaClientConfig);
+    private DiscoveryClient createEurekaClient(String namespace) {
+        return new DiscoveryClient(applicationInfoManager,new DefaultEurekaClientConfig(namespace),null);
     }
     
     @Override
     public void doRegister(URL url) {
-        eurekaClient.re
+        eurekaClient.registerHealthCheck(currentStatus -> InstanceInfo.InstanceStatus.UP);
     }
     
     @Override
     public void doUnregister(URL url) {
-    
+        eurekaClient.shutdown();
     }
     
     @Override
     public void doSubscribe(URL url, NotifyListener listener) {
-    
+        List<InstanceInfo> instanceInfoList = eurekaClient.getInstancesById(instanceInfo.getId());
+        listener.notify(toUrls(instanceInfoList));
     }
-    
+
+    private List<URL> toUrls(List<InstanceInfo> instanceInfoList) {
+        List<URL> urls = new ArrayList<>();
+        for (InstanceInfo instanceInfo : instanceInfoList) {
+            // TODO
+        }
+        return urls;
+    }
+
     @Override
     public void doUnsubscribe(URL url, NotifyListener listener) {
-    
+        eurekaClient.shutdown();
     }
-    
     
     @Override
     public boolean isAvailable() {
-        return false;
+        return eurekaClient.getInstanceRemoteStatus() == InstanceInfo.InstanceStatus.UP;
     }
 }
