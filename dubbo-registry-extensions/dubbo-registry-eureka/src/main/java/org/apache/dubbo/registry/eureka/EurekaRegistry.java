@@ -6,6 +6,7 @@ import com.netflix.appinfo.providers.EurekaConfigBasedInstanceInfoProvider;
 import com.netflix.discovery.DefaultEurekaClientConfig;
 import com.netflix.discovery.DiscoveryClient;
 import org.apache.dubbo.common.URL;
+import org.apache.dubbo.metadata.ServiceNameMapping;
 import org.apache.dubbo.registry.NotifyListener;
 import org.apache.dubbo.registry.support.FailbackRegistry;
 
@@ -14,18 +15,16 @@ import java.util.List;
 
 public class EurekaRegistry extends FailbackRegistry {
     
-    private static final String NAME = "eureka";
     private static final String NAMESPACE = "namespace";
-    private static final String DASH = "-";
 
     private final ApplicationInfoManager applicationInfoManager;
     private final InstanceInfo instanceInfo;
     private final DiscoveryClient eurekaClient;
 
     
-    public EurekaRegistry(URL url) {
-        super(url);
-        String namespace = url.getAttribute(NAMESPACE, NAME + DASH + url.getApplication()+ DASH +url.getAddress()).toString();
+    public EurekaRegistry(URL registryUrl) {
+        super(registryUrl);
+        String namespace = registryUrl.getAttribute(NAMESPACE, ServiceNameMapping.buildMappingKey(registryUrl)).toString();
         EurekaDataCenterInstanceConfig instanceConfig = new EurekaDataCenterInstanceConfig(namespace);
         InstanceInfo instanceInfo = new EurekaConfigBasedInstanceInfoProvider(instanceConfig).get();
         this.instanceInfo = instanceInfo;
