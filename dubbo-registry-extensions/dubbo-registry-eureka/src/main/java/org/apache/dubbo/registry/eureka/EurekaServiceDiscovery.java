@@ -102,11 +102,15 @@ public class EurekaServiceDiscovery extends AbstractServiceDiscovery {
 
     @Override
     public List<ServiceInstance> getInstances(String serviceName) throws NullPointerException {
-        eurekaClient.getInstancesById(instanceInfo.getInstanceId());
+        List<InstanceInfo> instanceInfoList = eurekaClient.getInstancesById(instanceInfo.getInstanceId());
+        return convertToServiceInstances(instanceInfoList);
+    }
+    
+    private List<ServiceInstance> convertToServiceInstances(List<InstanceInfo> instanceInfoList) {
         return null;
     }
-
-
+    
+    
     private static class EurekaEventListenerImpl implements EurekaEventListener {
         private final ServiceInstancesChangedListener listener;
         private final String serviceName;
