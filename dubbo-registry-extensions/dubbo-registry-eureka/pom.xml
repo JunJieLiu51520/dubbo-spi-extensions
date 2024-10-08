@@ -13,7 +13,8 @@
     <version>${revision}</version>
     <artifactId>dubbo-registry-eureka</artifactId>
     <name>${project.artifactId}</name>
-    <description>The SOFARegistry module of Dubbo project</description>
+    <packaging>jar</packaging>
+    <description>The EurekaRegistry module of Dubbo project</description>
 
 
 
@@ -59,31 +60,6 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <scope>test</scope>
-        </dependency>
-
-        <!-- test modules -->
-        <dependency>
-            <groupId>com.alipay.sofa</groupId>
-            <artifactId>registry-test</artifactId>
-            <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <artifactId>log4j-over-slf4j</artifactId>
-                    <groupId>org.slf4j</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>log4j-jcl</artifactId>
-                    <groupId>org.apache.logging.log4j</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>log4j-core</artifactId>
-                    <groupId>org.apache.logging.log4j</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>log4j-api</artifactId>
-                    <groupId>org.apache.logging.log4j</groupId>
-                </exclusion>
-            </exclusions>
         </dependency>
 
         <dependency>
